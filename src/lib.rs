@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use tracing::debug;
 
 mod correctness;
 pub use correctness::Correctness;
@@ -37,6 +38,7 @@ impl Wordle {
 		// We allow more for stats purposes.
 		for i in 1..=ROUNDS {
 			let guess = guesser.guess(&history);
+			debug!("Guessed {guess}");
 
 			// make sure the guess is legal
 			assert!(self.dictionary.contains(guess.as_str()), "illegal guess `{guess}`");

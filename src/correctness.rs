@@ -30,7 +30,7 @@ impl Correctness {
 		// keep track of the characters we already marked as `Correct`
 		let mut marked = [false; 5];
 		for (idx, &correctness) in correctness_mask.iter().enumerate() {
-			if correctness == Correctness::Correct {
+			if correctness.is_correct() {
 				marked[idx] = true;
 			}
 		}
@@ -38,7 +38,7 @@ impl Correctness {
 		// mark misplaced characters
 		for (idx, guess_char) in guess.chars().enumerate() {
 			// skip already marked characters
-			if correctness_mask[idx] == Correctness::Correct {
+			if correctness_mask[idx].is_correct() {
 				continue;
 			}
 
@@ -59,6 +59,30 @@ impl Correctness {
 		}
 
 		correctness_mask
+	}
+
+	pub fn is_correct(&self) -> bool {
+		matches!(self, Correctness::Correct)
+	}
+
+	pub fn is_misplaced(&self) -> bool {
+		matches!(self, Correctness::Misplaced)
+	}
+
+	pub fn is_incorrect(&self) -> bool {
+		matches!(self, Correctness::Incorrect)
+	}
+
+	#[rustfmt::skip]
+	pub fn permutations() -> impl Iterator<Item = [Self; 5]> {
+		itertools::iproduct!(
+			[Correctness::Correct, Correctness::Misplaced, Correctness::Incorrect],
+			[Correctness::Correct, Correctness::Misplaced, Correctness::Incorrect],
+			[Correctness::Correct, Correctness::Misplaced, Correctness::Incorrect],
+			[Correctness::Correct, Correctness::Misplaced, Correctness::Incorrect],
+			[Correctness::Correct, Correctness::Misplaced, Correctness::Incorrect]
+		)
+		.map(|(a, b, c, d, e)| [a, b, c, d, e])
 	}
 }
 
@@ -90,20 +114,24 @@ impl Ord for Correctness {
 	}
 }
 
+/// # Example
+///
+/// ```
+/// cmask![C C M I C] // turns into `[Correct, Correct, Misplaced, Incorrect, Correct]`
+/// ```
+#[cfg(test)]
+macro_rules! cmask {
+	(C) => { $crate::Correctness::Correct };
+	(M) => { $crate::Correctness::Misplaced };
+	(I) => { $crate::Correctness::Incorrect };
+	($($c:tt)+) => [[$(cmask!($c)),+]];
+}
+
+#[cfg(test)]
+pub(crate) use cmask;
+
 #[cfg(test)]
 mod tests {
-	/// # Example
-	///
-	/// ```
-	/// cmask![C C M I C] // turns into `[Correct, Correct, Misplaced, Incorrect, Correct]`
-	/// ```
-	macro_rules! cmask {
-		(C) => { $crate::Correctness::Correct };
-		(M) => { $crate::Correctness::Misplaced };
-		(I) => { $crate::Correctness::Incorrect };
-		($($c:tt)+) => [[$(cmask!($c)),+]];
-	}
-
 	mod game {
 		use crate::Wordle;
 
