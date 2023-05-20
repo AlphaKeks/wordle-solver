@@ -5,29 +5,33 @@ use tracing::{error, info, Level};
 use wordle_solver::{algorithms, Guesser, Wordle};
 
 const GAMES: &str = include_str!("../data/words/answers.txt");
-const MAX_ATTEMPTS: usize = usize::MAX;
 
 fn main() {
-	let args = Args::parse();
+	let Args {
+		log_level,
+		implementation,
+		max_games,
+		max_attempts,
+	} = Args::parse();
 
 	tracing_subscriber::fmt()
 		.compact()
-		.with_max_level(args.log_level)
+		.with_max_level(log_level)
 		.without_time()
 		.init();
 
-	let took = match args.implementation {
-		Implementation::Naive => play::<algorithms::NaiveGuesser>(args.max_games),
+	let took = match implementation {
+		Implementation::Naive => play::<algorithms::NaiveGuesser>(max_games, max_attempts),
 	}
 	.elapsed();
 
-	match args.max_games {
+	match max_games {
 		1 => info!("Played 1 game in {took:.2?}."),
 		n => info!("Played {n} games in {took:.2?}."),
 	};
 }
 
-fn play<G: Guesser + Default>(max_games: usize) -> Instant {
+fn play<G: Guesser + Default>(max_games: usize, max_attempts: usize) -> Instant {
 	let wordle = Wordle::new();
 
 	match max_games {
@@ -39,12 +43,12 @@ fn play<G: Guesser + Default>(max_games: usize) -> Instant {
 
 	for answer in GAMES.lines().take(max_games) {
 		let start = Instant::now();
-		if let Some(n_attempts) = wordle.play::<MAX_ATTEMPTS>(answer, G::default()) {
+		if let Some(n_attempts) = wordle.play(answer, G::default(), max_attempts) {
 			let took = start.elapsed();
 			info!("Guessed \"{answer}\" in {n_attempts} attempts. (took {took:.2?})");
 		} else {
 			let took = start.elapsed();
-			error!("Did not guess \"{answer}\" in <={MAX_ATTEMPTS} attempts. (took {took:.2?})");
+			error!("Did not guess \"{answer}\" in <={max_attempts} attempts. (took {took:.2?})");
 		}
 	}
 
@@ -53,20 +57,25 @@ fn play<G: Guesser + Default>(max_games: usize) -> Instant {
 
 #[derive(Parser)]
 struct Args {
-	/// The implementation to use.
-	#[arg(long = "impl")]
-	#[clap(default_value = "naive")]
-	implementation: Implementation,
-
 	/// `RUST_LOG` level
 	#[arg(long = "logs")]
 	#[clap(default_value = "DEBUG")]
 	log_level: Level,
 
+	/// The implementation to use.
+	#[arg(long = "impl")]
+	#[clap(default_value = "naive")]
+	implementation: Implementation,
+
 	/// The amount of games to play
 	#[arg(long = "games")]
 	#[clap(default_value = "1")]
 	max_games: usize,
+
+	/// The maximum amount of attempts per guess (official Wordle allows 6)
+	#[arg(long = "attempts")]
+	#[clap(default_value = "18446744073709551615")]
+	max_attempts: usize,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]

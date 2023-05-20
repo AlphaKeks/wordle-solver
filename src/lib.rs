@@ -27,16 +27,17 @@ impl Wordle {
 		}
 	}
 
-	pub fn play<const ROUNDS: usize>(
+	pub fn play(
 		&self,
 		answer: &'static str,
 		mut guesser: impl Guesser,
+		max_attempts: usize,
 	) -> Option<usize> {
 		let mut history = Vec::new();
 
 		// The actual Wordle game allows 6 guesses.
 		// We allow more for stats purposes.
-		for i in 1..=ROUNDS {
+		for i in 1..=max_attempts {
 			let guess = guesser.guess(&history);
 			debug!("Guessed {guess}");
 
