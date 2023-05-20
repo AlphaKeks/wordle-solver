@@ -4,5 +4,5 @@
 /data/words/5-letter-words
 /data/profiling/*.data
 *.data
-*.svg
+/*.svg
 /bins
