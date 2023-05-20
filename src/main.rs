@@ -1,7 +1,7 @@
 use clap::{Parser, ValueEnum};
 use std::time::Instant;
 use tracing::{error, info, Level};
-use wordle_solver::algorithms::{LessAllocsGuesser, NaiveGuesser, VecDict};
+use wordle_solver::algorithms::{LessAllocsGuesser, NaiveGuesser, OnceInit, VecDict};
 use wordle_solver::{Guesser, Wordle};
 
 const GAMES: &str = include_str!("../data/words/answers.txt");
@@ -24,6 +24,7 @@ fn main() {
 		Implementation::Naive => play::<NaiveGuesser>(max_games, max_attempts),
 		Implementation::LessAllocs => play::<LessAllocsGuesser>(max_games, max_attempts),
 		Implementation::VecDict => play::<VecDict>(max_games, max_attempts),
+		Implementation::OnceCell => play::<OnceInit>(max_games, max_attempts),
 	}
 	.elapsed();
 
@@ -86,4 +87,5 @@ enum Implementation {
 	Naive,
 	LessAllocs,
 	VecDict,
+	OnceCell,
 }
