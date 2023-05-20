@@ -46,10 +46,10 @@ impl Correctness {
 			// currently checking (`guess_char`) => mark as `Misplaced`
 			if answer
 				.bytes()
-				.enumerate()
-				.any(|(dup_idx, dup_c)| {
-					if dup_c == guess_char && !marked[dup_idx] {
-						marked[dup_idx] = true;
+				.zip(marked.iter_mut())
+				.any(|(dup_c, marked)| {
+					if dup_c == guess_char && !*marked {
+						*marked = true;
 						return true;
 					}
 					false
