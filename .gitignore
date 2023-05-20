@@ -5,3 +5,4 @@
 /data/profiling/*.data
 *.data
 *.svg
+/bins

@@ -27,9 +27,9 @@ impl Guess<'_> {
 		let mut marked = [false; 5];
 
 		// mark characters as `Correct`
-		let prev_guess = self.word.chars();
+		let prev_guess = self.word.bytes();
 		let prev_correctness = self.correctness.iter();
-		let cmp_guess = cmp.chars();
+		let cmp_guess = cmp.bytes();
 
 		for (idx, ((prev_char, &prev_correctness), cmp_char)) in prev_guess
 			.zip(prev_correctness)
@@ -49,7 +49,7 @@ impl Guess<'_> {
 		}
 
 		let prev_correctness = self.correctness.iter();
-		let cmp_guess = cmp.chars();
+		let cmp_guess = cmp.bytes();
 
 		for (idx, (cmp_char, &prev_correctness)) in
 			std::iter::zip(cmp_guess, prev_correctness).enumerate()
@@ -62,7 +62,7 @@ impl Guess<'_> {
 
 			let found_misplaced = self
 				.word
-				.chars()
+				.bytes()
 				.zip(&self.correctness)
 				.enumerate()
 				.any(|(j, (char, correctness))| {
