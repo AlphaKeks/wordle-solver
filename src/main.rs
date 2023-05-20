@@ -1,6 +1,5 @@
-use std::time::Instant;
-
 use clap::{Parser, ValueEnum};
+use std::time::Instant;
 use tracing::{error, info, Level};
 use wordle_solver::{algorithms, Guesser, Wordle};
 
@@ -56,6 +55,7 @@ fn play<G: Guesser + Default>(max_games: usize, max_attempts: usize) -> Instant 
 }
 
 #[derive(Parser)]
+#[clap(version)]
 struct Args {
 	/// `RUST_LOG` level
 	#[arg(long = "logs")]
