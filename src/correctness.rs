@@ -20,7 +20,7 @@ impl Correctness {
 
 		// mark correct characters
 		for (idx, (answer_char, guess_char)) in
-			std::iter::zip(answer.chars(), guess.chars()).enumerate()
+			std::iter::zip(answer.bytes(), guess.bytes()).enumerate()
 		{
 			if answer_char == guess_char {
 				correctness_mask[idx] = Correctness::Correct;
@@ -36,7 +36,7 @@ impl Correctness {
 		}
 
 		// mark misplaced characters
-		for (idx, guess_char) in guess.chars().enumerate() {
+		for (idx, guess_char) in guess.bytes().enumerate() {
 			// skip already marked characters
 			if correctness_mask[idx].is_correct() {
 				continue;
@@ -45,7 +45,7 @@ impl Correctness {
 			// check if there are other characters in the `answer` that are the same character we are
 			// currently checking (`guess_char`) => mark as `Misplaced`
 			if answer
-				.chars()
+				.bytes()
 				.enumerate()
 				.any(|(dup_idx, dup_c)| {
 					if dup_c == guess_char && !marked[dup_idx] {
