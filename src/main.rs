@@ -4,7 +4,7 @@ use clap::{Parser, ValueEnum};
 use tracing::{error, info, Level};
 use wordle_solver::{algorithms, Guesser, Wordle};
 
-const GAMES: &str = include_str!("../data/answers.txt");
+const GAMES: &str = include_str!("../data/words/answers.txt");
 const MAX_ATTEMPTS: usize = usize::MAX;
 
 fn main() {

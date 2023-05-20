@@ -9,7 +9,7 @@ pub use guesser::{Guess, Guesser};
 
 pub mod algorithms;
 
-const DICTIONARY: &str = include_str!("../data/legal-words-with-counts.txt");
+const DICTIONARY: &str = include_str!("../data/words/legal-words-with-counts.txt");
 
 pub struct Wordle {
 	dictionary: HashSet<&'static str>,

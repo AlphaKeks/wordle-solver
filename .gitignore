@@ -1,4 +1,7 @@
 /target
 /Cargo.lock
-/data/ngrams
-/data/5-letter-words
+/data/words/ngrams
+/data/words/5-letter-words
+/data/profiling/*.data
+*.data
+*.svg
