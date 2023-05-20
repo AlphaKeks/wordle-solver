@@ -104,6 +104,107 @@ mod tests {
 		($($c:tt)+) => [[$(cmask!($c)),+]];
 	}
 
+	mod game {
+		use crate::Wordle;
+
+		macro_rules! guesser {
+			(|$history:ident| $impl:block) => {{
+				struct G;
+
+				impl $crate::Guesser for G {
+					fn guess(&mut self, $history: &[$crate::Guess]) -> String {
+						$impl
+					}
+				}
+
+				G
+			}};
+		}
+
+		const MAX_ROUNDS: usize = 6;
+
+		#[test]
+		fn genius() {
+			let w = Wordle::new();
+			let g = guesser!(|_history| { String::from("moved") });
+			let result = w.play::<MAX_ROUNDS>("moved", g);
+			assert_eq!(result, Some(1));
+		}
+
+		#[test]
+		fn magnificent() {
+			let w = Wordle::new();
+			let g = guesser!(|history| {
+				if history.len() == 1 {
+					return String::from("right");
+				}
+				String::from("wrong")
+			});
+			let result = w.play::<MAX_ROUNDS>("right", g);
+			assert_eq!(result, Some(2));
+		}
+
+		#[test]
+		fn impressive() {
+			let w = Wordle::new();
+			let g = guesser!(|history| {
+				if history.len() == 2 {
+					return String::from("right");
+				}
+				String::from("wrong")
+			});
+			let result = w.play::<MAX_ROUNDS>("right", g);
+			assert_eq!(result, Some(3));
+		}
+
+		#[test]
+		fn splendid() {
+			let w = Wordle::new();
+			let g = guesser!(|history| {
+				if history.len() == 3 {
+					return String::from("right");
+				}
+				String::from("wrong")
+			});
+			let result = w.play::<MAX_ROUNDS>("right", g);
+			assert_eq!(result, Some(4));
+		}
+
+		#[test]
+		fn great() {
+			let w = Wordle::new();
+			let g = guesser!(|history| {
+				if history.len() == 4 {
+					return String::from("right");
+				}
+				String::from("wrong")
+			});
+			let result = w.play::<MAX_ROUNDS>("right", g);
+			assert_eq!(result, Some(5));
+		}
+
+		#[test]
+		fn phew() {
+			let w = Wordle::new();
+			let g = guesser!(|history| {
+				if history.len() == 5 {
+					return String::from("right");
+				}
+				String::from("wrong")
+			});
+			let result = w.play::<MAX_ROUNDS>("right", g);
+			assert_eq!(result, Some(6));
+		}
+
+		#[test]
+		fn nope() {
+			let w = Wordle::new();
+			let g = guesser!(|_history| { String::from("wrong") });
+			let result = w.play::<MAX_ROUNDS>("right", g);
+			assert_eq!(result, None);
+		}
+	}
+
 	mod compute {
 		use crate::Correctness;
 
