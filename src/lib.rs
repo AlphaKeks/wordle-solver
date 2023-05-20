@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{borrow::Cow, collections::HashSet};
 use tracing::debug;
 
 mod correctness;
@@ -50,7 +50,7 @@ impl Wordle {
 
 			let correctness = Correctness::compute(answer, &guess);
 
-			history.push(Guess { word: guess, correctness });
+			history.push(Guess { word: Cow::Owned(guess), correctness });
 		}
 
 		None

@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use crate::Correctness;
 
 pub trait Guesser {
@@ -11,12 +13,12 @@ impl<T: Guesser> Guesser for &mut T {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Guess {
-	pub(crate) word: String,
+pub struct Guess<'w> {
+	pub(crate) word: Cow<'w, str>,
 	pub(crate) correctness: [Correctness; 5],
 }
 
-impl Guess {
+impl Guess<'_> {
 	pub fn matches(&self, cmp: &str) -> bool {
 		// sanity checks
 		debug_assert_eq!(self.word.len(), 5);
@@ -109,11 +111,12 @@ impl Guess {
 mod tests {
 	mod matcher {
 		use crate::{correctness::cmask, Guess};
+		use std::borrow::Cow;
 
 		macro_rules! check {
 			($word:literal + [$($mask:tt)+] allows $guess:literal) => {
 				assert!(Guess {
-						word: String::from($word),
+						word: Cow::Borrowed($word),
 						correctness: $crate::correctness::cmask![$($mask )+],
 					}
 					.matches($guess)
@@ -122,7 +125,7 @@ mod tests {
 
 			($word:literal + [$($mask:tt)+] disallows $guess:literal) => {
 				assert!(!Guess {
-						word: String::from($word),
+						word: Cow::Borrowed($word),
 						correctness: $crate::correctness::cmask![$($mask )+],
 					}
 					.matches($guess)

@@ -155,7 +155,7 @@ mod tests {
 		fn genius() {
 			let w = Wordle::new();
 			let g = guesser!(|_history| { String::from("moved") });
-			let result = w.play::<MAX_ROUNDS>("moved", g);
+			let result = w.play("moved", g, MAX_ROUNDS);
 			assert_eq!(result, Some(1));
 		}
 
@@ -168,7 +168,7 @@ mod tests {
 				}
 				String::from("wrong")
 			});
-			let result = w.play::<MAX_ROUNDS>("right", g);
+			let result = w.play("right", g, MAX_ROUNDS);
 			assert_eq!(result, Some(2));
 		}
 
@@ -181,7 +181,7 @@ mod tests {
 				}
 				String::from("wrong")
 			});
-			let result = w.play::<MAX_ROUNDS>("right", g);
+			let result = w.play("right", g, MAX_ROUNDS);
 			assert_eq!(result, Some(3));
 		}
 
@@ -194,7 +194,7 @@ mod tests {
 				}
 				String::from("wrong")
 			});
-			let result = w.play::<MAX_ROUNDS>("right", g);
+			let result = w.play("right", g, MAX_ROUNDS);
 			assert_eq!(result, Some(4));
 		}
 
@@ -207,7 +207,7 @@ mod tests {
 				}
 				String::from("wrong")
 			});
-			let result = w.play::<MAX_ROUNDS>("right", g);
+			let result = w.play("right", g, MAX_ROUNDS);
 			assert_eq!(result, Some(5));
 		}
 
@@ -220,7 +220,7 @@ mod tests {
 				}
 				String::from("wrong")
 			});
-			let result = w.play::<MAX_ROUNDS>("right", g);
+			let result = w.play("right", g, MAX_ROUNDS);
 			assert_eq!(result, Some(6));
 		}
 
@@ -228,7 +228,7 @@ mod tests {
 		fn nope() {
 			let w = Wordle::new();
 			let g = guesser!(|_history| { String::from("wrong") });
-			let result = w.play::<MAX_ROUNDS>("right", g);
+			let result = w.play("right", g, MAX_ROUNDS);
 			assert_eq!(result, None);
 		}
 	}

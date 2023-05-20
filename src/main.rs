@@ -1,7 +1,8 @@
 use clap::{Parser, ValueEnum};
 use std::time::Instant;
 use tracing::{error, info, Level};
-use wordle_solver::{algorithms, Guesser, Wordle};
+use wordle_solver::algorithms::{LessAllocsGuesser, NaiveGuesser};
+use wordle_solver::{Guesser, Wordle};
 
 const GAMES: &str = include_str!("../data/words/answers.txt");
 
@@ -20,7 +21,8 @@ fn main() {
 		.init();
 
 	let took = match implementation {
-		Implementation::Naive => play::<algorithms::NaiveGuesser>(max_games, max_attempts),
+		Implementation::Naive => play::<NaiveGuesser>(max_games, max_attempts),
+		Implementation::LessAllocs => play::<LessAllocsGuesser>(max_games, max_attempts),
 	}
 	.elapsed();
 
@@ -81,4 +83,5 @@ struct Args {
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum Implementation {
 	Naive,
+	LessAllocs,
 }

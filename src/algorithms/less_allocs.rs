@@ -2,12 +2,12 @@ use crate::{Correctness, Guess, Guesser, DICTIONARY};
 use std::{borrow::Cow, collections::HashMap};
 use tracing::{debug, trace};
 
-pub struct NaiveGuesser {
+pub struct LessAllocsGuesser {
 	remaining: HashMap<&'static str, usize>,
 	remaining_count: usize,
 }
 
-impl NaiveGuesser {
+impl LessAllocsGuesser {
 	fn update_remaining_count(&mut self) {
 		self.remaining_count = self
 			.remaining
@@ -22,8 +22,7 @@ impl NaiveGuesser {
 
 			for (candidate, &count) in &self.remaining {
 				let guess = Guess {
-					// emulate the old behavior by cloning
-					word: Cow::Owned(word.to_owned()),
+					word: Cow::Borrowed(word),
 					correctness: pattern,
 				};
 
@@ -42,7 +41,7 @@ impl NaiveGuesser {
 	}
 }
 
-impl Default for NaiveGuesser {
+impl Default for LessAllocsGuesser {
 	fn default() -> Self {
 		let remaining = HashMap::from_iter(DICTIONARY.lines().map(|line| {
 			let (word, count) = line
@@ -68,7 +67,7 @@ struct Candidate {
 	score: f64,
 }
 
-impl Guesser for NaiveGuesser {
+impl Guesser for LessAllocsGuesser {
 	fn guess(&mut self, history: &[Guess]) -> String {
 		if let Some(last) = history.last() {
 			self.remaining
