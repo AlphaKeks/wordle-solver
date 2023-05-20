@@ -1,0 +1,4 @@
+/target
+/Cargo.lock
+/data/ngrams
+/data/5-letter-words/5-letter-words.txt
