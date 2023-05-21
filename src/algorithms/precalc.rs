@@ -8,12 +8,12 @@ static DICT: OnceCell<Vec<(Word, usize)>> = OnceCell::new();
 #[allow(clippy::type_complexity)]
 static MATCH: OnceCell<BTreeMap<(Word, Word, [Correctness; 5]), bool>> = OnceCell::new();
 
-pub struct Precalc {
+pub struct PrecalcGuesser {
 	dict: Cow<'static, Vec<(Word, usize)>>,
 	remaining_count: usize,
 }
 
-impl Precalc {
+impl PrecalcGuesser {
 	fn update_remaining_count(&mut self) {
 		self.remaining_count = self
 			.dict
@@ -86,7 +86,7 @@ impl Precalc {
 	}
 }
 
-impl Default for Precalc {
+impl Default for PrecalcGuesser {
 	fn default() -> Self {
 		let dict = DICTIONARY
 			.lines()
@@ -124,7 +124,7 @@ struct Candidate {
 	score: f64,
 }
 
-impl Guesser for Precalc {
+impl Guesser for PrecalcGuesser {
 	fn guess(&mut self, history: &[Guess]) -> String {
 		if let Some(last) = history.last() {
 			if let Cow::Owned(dict) = &mut self.dict {

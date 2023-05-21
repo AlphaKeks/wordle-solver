@@ -2,12 +2,12 @@ use crate::{Correctness, Guess, Guesser, Word, DICTIONARY};
 use std::borrow::Cow;
 use tracing::{debug, trace};
 
-pub struct VecDict {
+pub struct VecDictGuesser {
 	dict: Vec<(Word, usize)>,
 	remaining_count: usize,
 }
 
-impl VecDict {
+impl VecDictGuesser {
 	fn update_remaining_count(&mut self) {
 		self.remaining_count = self
 			.dict
@@ -41,7 +41,7 @@ impl VecDict {
 	}
 }
 
-impl Default for VecDict {
+impl Default for VecDictGuesser {
 	fn default() -> Self {
 		let mut dict = DICTIONARY
 			.lines()
@@ -72,7 +72,7 @@ struct Candidate {
 	score: f64,
 }
 
-impl Guesser for VecDict {
+impl Guesser for VecDictGuesser {
 	fn guess(&mut self, history: &[Guess]) -> String {
 		if let Some(last) = history.last() {
 			self.dict

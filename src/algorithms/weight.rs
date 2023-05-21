@@ -5,12 +5,12 @@ use tracing::{debug, trace};
 
 static DICT: OnceCell<Vec<(Word, usize)>> = OnceCell::new();
 
-pub struct OnceInitGuesser {
+pub struct WeightGuesser {
 	dict: Cow<'static, Vec<(Word, usize)>>,
 	remaining_count: usize,
 }
 
-impl OnceInitGuesser {
+impl WeightGuesser {
 	fn update_remaining_count(&mut self) {
 		self.remaining_count = self
 			.dict
@@ -44,7 +44,7 @@ impl OnceInitGuesser {
 	}
 }
 
-impl Default for OnceInitGuesser {
+impl Default for WeightGuesser {
 	fn default() -> Self {
 		let mut dict = DICTIONARY
 			.lines()
@@ -80,7 +80,7 @@ struct Candidate {
 	score: f64,
 }
 
-impl Guesser for OnceInitGuesser {
+impl Guesser for WeightGuesser {
 	fn guess(&mut self, history: &[Guess]) -> String {
 		if let Some(last) = history.last() {
 			if let Cow::Owned(dict) = &mut self.dict {
@@ -115,9 +115,10 @@ impl Guesser for OnceInitGuesser {
 
 		debug!("starting with {best:?}");
 
-		for (word, _) in remaining {
+		for &(word, count) in remaining {
 			trace!("progress");
-			let score = self.compute_score(word);
+			let p_word = count as f64 / self.remaining_count as f64;
+			let score = p_word * self.compute_score(word);
 			if score > best.score {
 				debug!(%score, %best.score, "\"{}\" is better than \"{}\"", word, best.word);
 				best = Candidate { word, score };

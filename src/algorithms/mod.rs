@@ -5,10 +5,13 @@ mod less_allocs;
 pub use less_allocs::LessAllocsGuesser;
 
 mod vec_dict;
-pub use vec_dict::VecDict;
+pub use vec_dict::VecDictGuesser;
 
 mod once_init;
-pub use once_init::OnceInit;
+pub use once_init::OnceInitGuesser;
 
 mod precalc;
-pub use precalc::Precalc;
+pub use precalc::PrecalcGuesser;
+
+mod weight;
+pub use weight::WeightGuesser;

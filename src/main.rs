@@ -1,8 +1,7 @@
 use clap::{Parser, ValueEnum};
 use std::time::Instant;
 use tracing::{error, info, Level};
-use wordle_solver::algorithms::{LessAllocsGuesser, NaiveGuesser, OnceInit, Precalc, VecDict};
-use wordle_solver::{Guesser, Wordle};
+use wordle_solver::{algorithms, Guesser, Wordle};
 
 mod logger;
 
@@ -13,24 +12,28 @@ fn main() {
 
 	logger::init(args);
 
-	let took = match args.implementation {
-		Implementation::Naive => play::<NaiveGuesser>(args),
-		Implementation::LessAllocs => play::<LessAllocsGuesser>(args),
-		Implementation::VecDict => play::<VecDict>(args),
-		Implementation::OnceCell => play::<OnceInit>(args),
-		Implementation::Precalc => play::<Precalc>(args),
-	}
-	.elapsed();
+	let (started, avg_score) = match args.implementation {
+		Implementation::Naive => play::<algorithms::NaiveGuesser>(args),
+		Implementation::LessAllocs => play::<algorithms::LessAllocsGuesser>(args),
+		Implementation::VecDict => play::<algorithms::VecDictGuesser>(args),
+		Implementation::OnceCell => play::<algorithms::OnceInitGuesser>(args),
+		Implementation::Precalc => play::<algorithms::PrecalcGuesser>(args),
+		Implementation::Weight => play::<algorithms::WeightGuesser>(args),
+	};
+
+	let took = started.elapsed();
 
 	match args.max_games {
-		1 if args.parsable => info!("done after {took:.2?}."),
-		1 => info!("Played 1 game in {took:.2?}."),
-		_ if args.parsable => info!("done after {took:.2?}."),
-		n => info!("Played {n} games in {took:.2?}."),
+		1 if args.parsable => info!("{avg_score:.2} avg done after {took:.2?}."),
+		1 => info!("Played 1 game in {took:.2?}. Average score: {avg_score:.2}"),
+		_ if args.parsable => info!("{avg_score:.2} avg done after {took:.2?}."),
+		n => info!("Played {n} games in {took:.2?}. Average score: {avg_score:.2}"),
 	};
 }
 
-fn play<G: Guesser + Default>(Args { max_games, max_attempts, parsable, .. }: Args) -> Instant {
+fn play<G: Guesser + Default>(
+	Args { max_games, max_attempts, parsable, .. }: Args,
+) -> (Instant, f64) {
 	let wordle = Wordle::new();
 
 	if !parsable {
@@ -41,10 +44,14 @@ fn play<G: Guesser + Default>(Args { max_games, max_attempts, parsable, .. }: Ar
 	}
 
 	let start = Instant::now();
+	let mut score = 0;
+	let mut games = 0;
 
 	for answer in GAMES.lines().take(max_games) {
 		let start = Instant::now();
 		if let Some(n_attempts) = wordle.play(answer, G::default(), max_attempts) {
+			score += n_attempts;
+			games += 1;
 			let took = start.elapsed();
 			match parsable {
 				true => info!("{answer} in {n_attempts} ({took:.2?})"),
@@ -61,7 +68,9 @@ fn play<G: Guesser + Default>(Args { max_games, max_attempts, parsable, .. }: Ar
 		}
 	}
 
-	start
+	let score = score as f64 / games as f64;
+
+	(start, score)
 }
 
 #[derive(Clone, Copy, Parser)]
@@ -105,4 +114,5 @@ enum Implementation {
 	VecDict,
 	OnceCell,
 	Precalc,
+	Weight,
 }
