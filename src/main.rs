@@ -4,43 +4,40 @@ use tracing::{error, info, Level};
 use wordle_solver::algorithms::{LessAllocsGuesser, NaiveGuesser, OnceInit, VecDict};
 use wordle_solver::{Guesser, Wordle};
 
+mod logger;
+
 const GAMES: &str = include_str!("../data/words/answers.txt");
 
 fn main() {
-	let Args {
-		log_level,
-		implementation,
-		max_games,
-		max_attempts,
-	} = Args::parse();
+	let args = Args::parse();
 
-	tracing_subscriber::fmt()
-		.compact()
-		.with_max_level(log_level)
-		.with_timer(tracing_subscriber::fmt::time::uptime())
-		.init();
+	logger::init(args);
 
-	let took = match implementation {
-		Implementation::Naive => play::<NaiveGuesser>(max_games, max_attempts),
-		Implementation::LessAllocs => play::<LessAllocsGuesser>(max_games, max_attempts),
-		Implementation::VecDict => play::<VecDict>(max_games, max_attempts),
-		Implementation::OnceCell => play::<OnceInit>(max_games, max_attempts),
+	let took = match args.implementation {
+		Implementation::Naive => play::<NaiveGuesser>(args),
+		Implementation::LessAllocs => play::<LessAllocsGuesser>(args),
+		Implementation::VecDict => play::<VecDict>(args),
+		Implementation::OnceCell => play::<OnceInit>(args),
 	}
 	.elapsed();
 
-	match max_games {
+	match args.max_games {
+		1 if args.parsable => info!("done after {took:.2?}."),
 		1 => info!("Played 1 game in {took:.2?}."),
+		_ if args.parsable => info!("done after {took:.2?}."),
 		n => info!("Played {n} games in {took:.2?}."),
 	};
 }
 
-fn play<G: Guesser + Default>(max_games: usize, max_attempts: usize) -> Instant {
+fn play<G: Guesser + Default>(Args { max_games, max_attempts, parsable, .. }: Args) -> Instant {
 	let wordle = Wordle::new();
 
-	match max_games {
-		1 => info!("Playing a game!"),
-		n => info!("Playing {n} games!"),
-	};
+	if !parsable {
+		match max_games {
+			1 => info!("Playing a game!"),
+			n => info!("Playing {n} games!"),
+		};
+	}
 
 	let start = Instant::now();
 
@@ -48,17 +45,25 @@ fn play<G: Guesser + Default>(max_games: usize, max_attempts: usize) -> Instant 
 		let start = Instant::now();
 		if let Some(n_attempts) = wordle.play(answer, G::default(), max_attempts) {
 			let took = start.elapsed();
-			info!("Guessed \"{answer}\" in {n_attempts} attempts. (took {took:.2?})");
+			match parsable {
+				true => info!("{answer} in {n_attempts} ({took:.2?})"),
+				false => info!("Guessed \"{answer}\" in {n_attempts} attempts. (took {took:.2?})"),
+			};
 		} else {
 			let took = start.elapsed();
-			error!("Did not guess \"{answer}\" in <={max_attempts} attempts. (took {took:.2?})");
+			match parsable {
+				true => error!("no answer in {max_attempts} ({took:.2?})"),
+				false => error!(
+					"Did not guess \"{answer}\" in <={max_attempts} attempts. (took {took:.2?})"
+				),
+			};
 		}
 	}
 
 	start
 }
 
-#[derive(Parser)]
+#[derive(Clone, Copy, Parser)]
 #[clap(version)]
 struct Args {
 	/// `RUST_LOG` level
@@ -80,6 +85,16 @@ struct Args {
 	#[arg(long = "attempts")]
 	#[clap(default_value = "18446744073709551615")]
 	max_attempts: usize,
+
+	/// Print the elapsed time since the beginning of the program
+	#[arg(short = 'e', long = "elapsed")]
+	#[clap(default_value = "true")]
+	total_elapsed: bool,
+
+	/// Print a format that is much easier to parse
+	#[arg(short, long)]
+	#[clap(default_value = "false")]
+	parsable: bool,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
