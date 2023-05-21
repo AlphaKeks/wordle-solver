@@ -12,7 +12,7 @@ fn main() {
 
 	logger::init(args);
 
-	let (started, avg_score) = match args.implementation {
+	let (started, avg_score, fails) = match args.implementation {
 		Implementation::Naive => play::<algorithms::NaiveGuesser>(args),
 		Implementation::LessAllocs => play::<algorithms::LessAllocsGuesser>(args),
 		Implementation::VecDict => play::<algorithms::VecDictGuesser>(args),
@@ -20,21 +20,24 @@ fn main() {
 		Implementation::Precalc => play::<algorithms::PrecalcGuesser>(args),
 		Implementation::Weight => play::<algorithms::WeightGuesser>(args),
 		Implementation::Prune => play::<algorithms::PruneGuesser>(args),
+		Implementation::Cutoff => play::<algorithms::CutoffGuesser>(args),
 	};
 
 	let took = started.elapsed();
 
 	match args.max_games {
-		1 if args.parsable => info!("{avg_score:.2} avg done after {took:.2?}."),
+		1 if args.parsable => info!("{avg_score:.2} avg done after {took:.2?}"),
 		1 => info!("Played 1 game in {took:.2?}. Average score: {avg_score:.2}"),
-		_ if args.parsable => info!("{avg_score:.2} avg done after {took:.2?}."),
-		n => info!("Played {n} games in {took:.2?}. Average score: {avg_score:.2}"),
+		_ if args.parsable => info!("{avg_score:.2} avg done after {took:.2?}. {fails} fails"),
+		n => {
+			info!("Played {n} games in {took:.2?} ({fails} failed). Average score: {avg_score:.2}")
+		}
 	};
 }
 
 fn play<G: Guesser + Default>(
 	Args { max_games, max_attempts, parsable, .. }: Args,
-) -> (Instant, f64) {
+) -> (Instant, f64, usize) {
 	let wordle = Wordle::new();
 
 	if !parsable {
@@ -47,6 +50,7 @@ fn play<G: Guesser + Default>(
 	let start = Instant::now();
 	let mut score = 0;
 	let mut games = 0;
+	let mut failed = 0;
 
 	for answer in GAMES.lines().take(max_games) {
 		let start = Instant::now();
@@ -59,6 +63,7 @@ fn play<G: Guesser + Default>(
 				false => info!("Guessed \"{answer}\" in {n_attempts} attempts. (took {took:.2?})"),
 			};
 		} else {
+			failed += 1;
 			let took = start.elapsed();
 			match parsable {
 				true => error!("no answer in {max_attempts} ({took:.2?})"),
@@ -71,7 +76,7 @@ fn play<G: Guesser + Default>(
 
 	let score = score as f64 / games as f64;
 
-	(start, score)
+	(start, score, failed)
 }
 
 #[derive(Clone, Copy, Parser)]
@@ -117,4 +122,5 @@ enum Implementation {
 	Precalc,
 	Weight,
 	Prune,
+	Cutoff,
 }
