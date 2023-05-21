@@ -1,7 +1,7 @@
 use clap::{Parser, ValueEnum};
 use std::time::Instant;
 use tracing::{error, info, Level};
-use wordle_solver::algorithms::{LessAllocsGuesser, NaiveGuesser, OnceInit, VecDict};
+use wordle_solver::algorithms::{LessAllocsGuesser, NaiveGuesser, OnceInit, Precalc, VecDict};
 use wordle_solver::{Guesser, Wordle};
 
 mod logger;
@@ -18,6 +18,7 @@ fn main() {
 		Implementation::LessAllocs => play::<LessAllocsGuesser>(args),
 		Implementation::VecDict => play::<VecDict>(args),
 		Implementation::OnceCell => play::<OnceInit>(args),
+		Implementation::Precalc => play::<Precalc>(args),
 	}
 	.elapsed();
 
@@ -103,4 +104,5 @@ enum Implementation {
 	LessAllocs,
 	VecDict,
 	OnceCell,
+	Precalc,
 }
