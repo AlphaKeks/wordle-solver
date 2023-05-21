@@ -81,12 +81,17 @@ impl Dictionary<'_> {
 
 impl Dictionary<'_> {
 	/// Plays a game of Wordle against the given [`Guesser`] and.
-	/// If the [`Guesser`] fails to guess the `answer` in [`Guesser::MAX_ATTEMPTS`], this function
-	/// will return [`None`].
+	/// If the [`Guesser`] fails to guess the `answer` in `max_attempts`, this function will return
+	/// [`None`].
 	/// Otherwise it will return [`Some`] with the amount of required guesses.
-	pub fn play<G: Guesser>(&self, mut guesser: G, answer: Word) -> Option<usize> {
-		for round in 1..=G::MAX_ATTEMPTS {
-			trace!("[Round {} / {}] Making a guess...", round, G::MAX_ATTEMPTS);
+	pub fn play(
+		&self,
+		mut guesser: impl Guesser,
+		answer: Word,
+		max_attempts: usize,
+	) -> Option<usize> {
+		for round in 1..=max_attempts {
+			trace!("[Round {} / {}] Making a guess...", round, max_attempts);
 
 			// Make the guess
 			let guess = guesser.guess();

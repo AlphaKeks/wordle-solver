@@ -17,16 +17,11 @@ impl Guess<'_> {
 }
 
 pub trait Guesser {
-	/// The maximum amount of allowed guesses until the [`Guesser`] "fails".
-	const MAX_ATTEMPTS: usize;
-
 	/// A single guess by the [`Guesser`] that produces a [`Word`].
 	fn guess(&mut self) -> Word;
 }
 
 impl<G: Guesser> Guesser for &mut G {
-	const MAX_ATTEMPTS: usize = <G as Guesser>::MAX_ATTEMPTS;
-
 	fn guess(&mut self) -> Word {
 		<G as Guesser>::guess(self)
 	}

@@ -19,8 +19,6 @@ mod game {
 			}
 
 			impl $crate::Guesser for G {
-				const MAX_ATTEMPTS: usize = 6;
-
 				fn guess(&mut $self) -> $crate::Word {
 					$impl
 				}
@@ -30,11 +28,13 @@ mod game {
 		}};
 	}
 
+	const MAX_ATTEMPTS: usize = 6;
+
 	#[test]
 	fn genius() {
 		let w = Dictionary::new();
 		let g = guesser!(|self| { *b"right" });
-		let result = w.play(g, *b"right");
+		let result = w.play(g, *b"right", MAX_ATTEMPTS);
 		assert_eq!(result, Some(1));
 	}
 
@@ -46,7 +46,7 @@ mod game {
 			self.history.push(());
 			guess
 		});
-		let result = w.play(g, *b"right");
+		let result = w.play(g, *b"right", MAX_ATTEMPTS);
 		assert_eq!(result, Some(2));
 	}
 
@@ -58,7 +58,7 @@ mod game {
 			self.history.push(());
 			guess
 		});
-		let result = w.play(g, *b"right");
+		let result = w.play(g, *b"right", MAX_ATTEMPTS);
 		assert_eq!(result, Some(3));
 	}
 
@@ -70,7 +70,7 @@ mod game {
 			self.history.push(());
 			guess
 		});
-		let result = w.play(g, *b"right");
+		let result = w.play(g, *b"right", MAX_ATTEMPTS);
 		assert_eq!(result, Some(4));
 	}
 
@@ -82,7 +82,7 @@ mod game {
 			self.history.push(());
 			guess
 		});
-		let result = w.play(g, *b"right");
+		let result = w.play(g, *b"right", MAX_ATTEMPTS);
 		assert_eq!(result, Some(5));
 	}
 
@@ -94,7 +94,7 @@ mod game {
 			self.history.push(());
 			guess
 		});
-		let result = w.play(g, *b"right");
+		let result = w.play(g, *b"right", MAX_ATTEMPTS);
 		assert_eq!(result, Some(6));
 	}
 
@@ -106,7 +106,7 @@ mod game {
 			self.history.push(());
 			guess
 		});
-		let result = w.play(g, *b"right");
+		let result = w.play(g, *b"right", MAX_ATTEMPTS);
 		assert_eq!(result, None);
 	}
 }
