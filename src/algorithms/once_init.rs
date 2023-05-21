@@ -1,12 +1,12 @@
-use crate::{Correctness, Guess, Guesser, DICTIONARY};
+use crate::{Correctness, Guess, Guesser, Word, DICTIONARY};
 use once_cell::sync::OnceCell;
 use std::borrow::Cow;
 use tracing::{debug, trace};
 
-static DICT: OnceCell<Vec<(&'static str, usize)>> = OnceCell::new();
+static DICT: OnceCell<Vec<(Word, usize)>> = OnceCell::new();
 
 pub struct OnceInit {
-	dict: Cow<'static, Vec<(&'static str, usize)>>,
+	dict: Cow<'static, Vec<(Word, usize)>>,
 	remaining_count: usize,
 }
 
@@ -76,7 +76,7 @@ impl Default for OnceInit {
 
 #[derive(Debug, Clone, Copy)]
 struct Candidate {
-	word: &'static str,
+	word: Word,
 	score: f64,
 }
 

@@ -1,9 +1,9 @@
-use crate::{Correctness, Guess, Guesser, DICTIONARY};
+use crate::{Correctness, Guess, Guesser, Word, DICTIONARY};
 use std::borrow::Cow;
 use tracing::{debug, trace};
 
 pub struct VecDict {
-	dict: Vec<(&'static str, usize)>,
+	dict: Vec<(Word, usize)>,
 	remaining_count: usize,
 }
 
@@ -68,7 +68,7 @@ impl Default for VecDict {
 
 #[derive(Debug, Clone, Copy)]
 struct Candidate {
-	word: &'static str,
+	word: Word,
 	score: f64,
 }
 

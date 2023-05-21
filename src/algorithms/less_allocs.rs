@@ -1,9 +1,9 @@
-use crate::{Correctness, Guess, Guesser, DICTIONARY};
+use crate::{Correctness, Guess, Guesser, Word, DICTIONARY};
 use std::{borrow::Cow, collections::HashMap};
 use tracing::{debug, trace};
 
 pub struct LessAllocsGuesser {
-	remaining: HashMap<&'static str, usize>,
+	remaining: HashMap<Word, usize>,
 	remaining_count: usize,
 }
 
@@ -63,7 +63,7 @@ impl Default for LessAllocsGuesser {
 
 #[derive(Debug, Clone, Copy)]
 struct Candidate {
-	word: &'static str,
+	word: Word,
 	score: f64,
 }
 

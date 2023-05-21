@@ -11,8 +11,10 @@ pub mod algorithms;
 
 const DICTIONARY: &str = include_str!("../data/words/legal-words-with-counts.txt");
 
+pub type Word = &'static str;
+
 pub struct Wordle {
-	dictionary: HashSet<&'static str>,
+	dictionary: HashSet<Word>,
 }
 
 #[allow(clippy::new_without_default)]
@@ -29,7 +31,7 @@ impl Wordle {
 
 	pub fn play(
 		&self,
-		answer: &'static str,
+		answer: Word,
 		mut guesser: impl Guesser,
 		max_attempts: usize,
 	) -> Option<usize> {
