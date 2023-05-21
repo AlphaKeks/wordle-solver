@@ -17,7 +17,7 @@ fn main() {
 	tracing_subscriber::fmt()
 		.compact()
 		.with_max_level(log_level)
-		.without_time()
+		.with_timer(tracing_subscriber::fmt::time::uptime())
 		.init();
 
 	let took = match implementation {
