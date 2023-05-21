@@ -15,3 +15,6 @@ pub use precalc::PrecalcGuesser;
 
 mod weight;
 pub use weight::WeightGuesser;
+
+mod prune;
+pub use prune::PruneGuesser;

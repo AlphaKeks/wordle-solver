@@ -19,6 +19,7 @@ fn main() {
 		Implementation::OnceCell => play::<algorithms::OnceInitGuesser>(args),
 		Implementation::Precalc => play::<algorithms::PrecalcGuesser>(args),
 		Implementation::Weight => play::<algorithms::WeightGuesser>(args),
+		Implementation::Prune => play::<algorithms::PruneGuesser>(args),
 	};
 
 	let took = started.elapsed();
@@ -115,4 +116,5 @@ enum Implementation {
 	OnceCell,
 	Precalc,
 	Weight,
+	Prune,
 }
