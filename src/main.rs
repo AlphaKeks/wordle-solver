@@ -1,5 +1,7 @@
 use clap::{Parser, ValueEnum};
 use std::time::Instant;
+use tracing::{error, info, Level};
+use tracing_subscriber::fmt::time::Uptime;
 use wordle_solver::{Guesser, DICTIONARY};
 
 mod guessers;
@@ -17,6 +19,11 @@ struct Args {
 	#[clap(default_value = "6")]
 	max_attempts: usize,
 
+	/// `RUST_LOG` level
+	#[arg(long = "logs")]
+	#[clap(default_value = "info")]
+	log_level: Level,
+
 	/// Show the total elapsed time in the logs
 	#[arg(long = "elapsed")]
 	#[clap(default_value = "false")]
@@ -30,25 +37,31 @@ struct Args {
 
 fn main() {
 	let args = Args::parse();
+	setup_tracing(args);
 	let Args { max_games, guesser_impl, .. } = args;
 
-	println!("--- Welcome to Wordle! ---");
+	info!("--- Welcome to Wordle! ---");
 
 	match max_games.unwrap_or(1).max(1) {
-		1 => println!("    Playing 1 game!"),
-		n => println!("    Playing {n} games!"),
+		1 => info!("  Playing 1 game!"),
+		n => info!("  Playing {n} games!"),
 	};
 
-	println!("    Guesser: {guesser_impl:?}\n\n\n");
+	info!("   Guesser: {guesser_impl:?}\n");
 
 	let (avg_score, failed_games) = match guesser_impl {
 		GuesserImpl::Schnose => play::<guessers::Schnose>(args),
 	};
 
-	println!("    Done playing!");
-	println!("    Stats:");
-	println!("      ∙ Average score: {avg_score:.2}");
-	println!("      ∙ Failed games: {failed_games}");
+	info!("  Done playing!");
+	info!("  Stats:");
+	info!("    ∙ Average score: {avg_score:.2}");
+	info!("    ∙ Failed games: {failed_games}");
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum GuesserImpl {
+	Schnose,
 }
 
 fn play<G: Guesser + Default>(Args { max_games, max_attempts, .. }: Args) -> (f64, usize) {
@@ -66,13 +79,13 @@ fn play<G: Guesser + Default>(Args { max_games, max_attempts, .. }: Args) -> (f6
 			games_played += 1;
 
 			let took = start.elapsed();
-			println!("Guessed \"{answer}\" in {n_attempts} attempts. ({took:?})");
+			info!("Guessed \"{answer}\" in {n_attempts} attempts. ({took:?})");
 		} else {
 			games_played += 1;
 			games_failed += 1;
 
 			let took = start.elapsed();
-			eprintln!("Did not guess \"{answer}\" in <={max_attempts} attempts. ({took:?})");
+			error!("Did not guess \"{answer}\" in <={max_attempts} attempts. ({took:?})");
 		}
 	}
 
@@ -81,7 +94,19 @@ fn play<G: Guesser + Default>(Args { max_games, max_attempts, .. }: Args) -> (f6
 	(avg_score, games_failed)
 }
 
-#[derive(Debug, Clone, Copy, ValueEnum)]
-enum GuesserImpl {
-	Schnose,
+fn setup_tracing(Args { log_level, show_total_elapsed, .. }: Args) {
+	let subscriber = tracing_subscriber::fmt()
+		.compact()
+		.with_file(false)
+		.with_line_number(false)
+		.with_target(false)
+		.with_max_level(log_level);
+
+	if show_total_elapsed {
+		subscriber
+			.with_timer(Uptime::default())
+			.init();
+	} else {
+		subscriber.without_time().init();
+	}
 }

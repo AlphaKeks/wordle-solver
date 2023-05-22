@@ -1,4 +1,4 @@
-use crate::Guesser;
+use crate::{Correctness, Guess, Guesser};
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use std::{collections::HashSet, fmt::Display};
@@ -25,38 +25,23 @@ lazy_static! {
 	/// Global instance of a [`Dictionary`] so that the guesser doesn't have to make a new one for
 	/// each guess.
 	pub static ref DICTIONARY: Dictionary = {
-		let legal_words = include_str!("../../data/words/legal-words.txt")
-			.lines()
-			.map(|line| -> (Word, usize) {
-				let (word, count) = line
-					.split_once(' ')
-					.expect("Every line in the dictionary should be `word count`.");
+		Dictionary {
+			entries: include_str!("../../data/words/legal-words.txt")
+				.lines()
+				.map(|line| {
+					let (word, count) = line
+						.split_once(' ')
+						.expect("Every line in the dictionary should be `word count`.");
 
-				let count = count
-					.parse()
-					.expect("Every count should fit in `usize::MAX`.");
+					let count = count
+						.parse()
+						.expect("Every count should fit in `usize::MAX`.");
 
-				(word, count)
-			})
-			.collect_vec();
-
-		let total_word_count: usize = legal_words
-			.iter()
-			.map(|&(_, count)| count)
-			.sum();
-
-		let words = legal_words
-				.into_iter()
-				.map(|(word, count)| {
-					// TODO: Apply sigmoid to improve the average quality of guesses.
-					let frequency = count as f64 / total_word_count as f64;
-
-					DictionaryEntry { word, count, frequency }
+					DictionaryEntry { word, count }
 				})
-				.sorted_by_key(|entry| std::cmp::Reverse(entry.count))
-				.collect_vec();
-
-		Dictionary { words }
+				.sorted_unstable_by_key(|entry| std::cmp::Reverse(entry.count))
+				.collect_vec(),
+		}
 	};
 }
 
@@ -66,7 +51,7 @@ lazy_static! {
 /// and relative frequency.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Dictionary {
-	pub words: Vec<DictionaryEntry>,
+	pub entries: Vec<DictionaryEntry>,
 }
 
 impl Dictionary {
@@ -80,18 +65,24 @@ impl Dictionary {
 		answer: Word,
 		max_attempts: usize,
 	) -> Option<usize> {
+		let mut guess_history = Vec::new();
+
 		for round in 1..=max_attempts {
 			// Make the guess
-			let guess = guesser.guess();
+			let guess = guesser.guess(&guess_history);
 
 			// Ensure the guess is actually legal.
-			// [`debug_assert`] to prevent this from hurting performance in release mode.
-			debug_assert!(LEGAL_WORDS.contains(guess));
+			assert!(LEGAL_WORDS.contains(guess), "illegal guess \"{guess}\"");
 
 			// We guessed correctly!
 			if guess == answer {
 				return Some(round);
 			}
+
+			guess_history.push(Guess {
+				word: guess,
+				correctness: Correctness::compute(guess, answer),
+			});
 		}
 
 		None
@@ -100,7 +91,7 @@ impl Dictionary {
 
 impl Display for Dictionary {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		write!(f, "{:?}", self.words)
+		write!(f, "{:?}", self.entries)
 	}
 }
 
@@ -109,7 +100,6 @@ impl Display for Dictionary {
 pub struct DictionaryEntry {
 	pub word: Word,
 	pub count: usize,
-	pub frequency: f64,
 }
 
 impl Display for DictionaryEntry {

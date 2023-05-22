@@ -28,21 +28,6 @@ impl Correctness {
 		.map(|(a, b, c, d, e)| [a, b, c, d, e])
 	}
 
-	#[inline(always)]
-	pub fn is_correct(&self) -> bool {
-		matches!(self, Correctness::Correct)
-	}
-
-	#[inline(always)]
-	pub fn is_misplaced(&self) -> bool {
-		matches!(self, Correctness::Misplaced)
-	}
-
-	#[inline(always)]
-	pub fn is_incorrect(&self) -> bool {
-		matches!(self, Correctness::Incorrect)
-	}
-
 	/// Calculates the correctness of a guess, given the actual answer.
 	#[inline]
 	pub fn compute(guess: Word, answer: Word) -> CorrectnessPattern {
@@ -60,8 +45,8 @@ impl Correctness {
 		let mut already_marked = [false; 5];
 
 		// Keep track of characters that are considered "correct" so we can ignore them later on.
-		for (i, correctness) in cmask.iter().enumerate() {
-			if correctness.is_correct() {
+		for (i, &correctness) in cmask.iter().enumerate() {
+			if correctness == Correctness::Correct {
 				already_marked[i] = true;
 			}
 		}
@@ -69,7 +54,7 @@ impl Correctness {
 		// Mark misplaced characters.
 		for (i, guess_char) in guess.bytes().enumerate() {
 			// Ignore correct characters.
-			if cmask[i].is_correct() {
+			if cmask[i] == Correctness::Correct {
 				continue;
 			}
 
