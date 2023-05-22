@@ -3,7 +3,7 @@ use itertools::Itertools;
 use lazy_static::lazy_static;
 use std::{collections::HashSet, fmt::Display};
 
-pub type Word = &'static str;
+pub type Word = &'static [u8; 5];
 
 /// Answers for the official Wordle game (March 5th 2022)
 pub static ANSWERS: &str = include_str!("../../data/words/wordle-answers.txt");
@@ -37,7 +37,7 @@ lazy_static! {
 						.parse()
 						.expect("Every count should fit in `usize::MAX`.");
 
-					DictionaryEntry { word, count }
+					DictionaryEntry { word: word.as_bytes().try_into().unwrap(), count }
 				})
 				.sorted_unstable_by_key(|entry| std::cmp::Reverse(entry.count))
 				.collect_vec(),
@@ -72,7 +72,8 @@ impl Dictionary {
 			let guess = guesser.guess(&guess_history);
 
 			// Ensure the guess is actually legal.
-			assert!(LEGAL_WORDS.contains(guess), "illegal guess \"{guess}\"");
+			let guess_str = std::str::from_utf8(guess).unwrap();
+			assert!(LEGAL_WORDS.contains(guess_str), "illegal guess \"{guess_str}\"");
 
 			// We guessed correctly!
 			if guess == answer {
@@ -104,6 +105,6 @@ pub struct DictionaryEntry {
 
 impl Display for DictionaryEntry {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		f.write_str(self.word)
+		f.write_str(std::str::from_utf8(self.word).unwrap())
 	}
 }

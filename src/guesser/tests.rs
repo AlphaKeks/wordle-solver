@@ -24,8 +24,8 @@ mod game {
 	#[test]
 	fn genius() {
 		let w = &DICTIONARY;
-		let g = guesser!(|_history| { "right" });
-		let result = w.play(g, "right", MAX_ATTEMPTS);
+		let g = guesser!(|_history| { b"right" });
+		let result = w.play(g, b"right", MAX_ATTEMPTS);
 		assert_eq!(result, Some(1));
 	}
 
@@ -34,12 +34,12 @@ mod game {
 		let w = &DICTIONARY;
 		let g = guesser!(|history| {
 			if history.len() == 1 {
-				"right"
+				b"right"
 			} else {
-				"wrong"
+				b"wrong"
 			}
 		});
-		let result = w.play(g, "right", MAX_ATTEMPTS);
+		let result = w.play(g, b"right", MAX_ATTEMPTS);
 		assert_eq!(result, Some(2));
 	}
 
@@ -48,12 +48,12 @@ mod game {
 		let w = &DICTIONARY;
 		let g = guesser!(|history| {
 			if history.len() == 2 {
-				"right"
+				b"right"
 			} else {
-				"wrong"
+				b"wrong"
 			}
 		});
-		let result = w.play(g, "right", MAX_ATTEMPTS);
+		let result = w.play(g, b"right", MAX_ATTEMPTS);
 		assert_eq!(result, Some(3));
 	}
 
@@ -62,12 +62,12 @@ mod game {
 		let w = &DICTIONARY;
 		let g = guesser!(|history| {
 			if history.len() == 3 {
-				"right"
+				b"right"
 			} else {
-				"wrong"
+				b"wrong"
 			}
 		});
-		let result = w.play(g, "right", MAX_ATTEMPTS);
+		let result = w.play(g, b"right", MAX_ATTEMPTS);
 		assert_eq!(result, Some(4));
 	}
 
@@ -76,12 +76,12 @@ mod game {
 		let w = &DICTIONARY;
 		let g = guesser!(|history| {
 			if history.len() == 4 {
-				"right"
+				b"right"
 			} else {
-				"wrong"
+				b"wrong"
 			}
 		});
-		let result = w.play(g, "right", MAX_ATTEMPTS);
+		let result = w.play(g, b"right", MAX_ATTEMPTS);
 		assert_eq!(result, Some(5));
 	}
 
@@ -90,20 +90,20 @@ mod game {
 		let w = &DICTIONARY;
 		let g = guesser!(|history| {
 			if history.len() == 5 {
-				"right"
+				b"right"
 			} else {
-				"wrong"
+				b"wrong"
 			}
 		});
-		let result = w.play(g, "right", MAX_ATTEMPTS);
+		let result = w.play(g, b"right", MAX_ATTEMPTS);
 		assert_eq!(result, Some(6));
 	}
 
 	#[test]
 	fn failed() {
 		let w = &DICTIONARY;
-		let g = guesser!(|_history| { "wrong" });
-		let result = w.play(g, "right", MAX_ATTEMPTS);
+		let g = guesser!(|_history| { b"wrong" });
+		let result = w.play(g, b"right", MAX_ATTEMPTS);
 		assert_eq!(result, None);
 	}
 }
@@ -133,14 +133,14 @@ mod matcher {
 
 	#[test]
 	fn basic() {
-		ensure!("abcde" + [C C C C C] allows "abcde");
-		ensure!("abcdf" + [C C C C C] disallows "abcde");
-		ensure!("abcde" + [I I I I I] allows "fghij");
-		ensure!("abcde" + [M M M M M] allows "bcdea");
-		ensure!("aaabb" + [C M I I I] disallows "accaa");
-		ensure!("baaaa" + [I C M I I] disallows "caacc");
-		ensure!("abcde" + [I I I I I] disallows "bcdea");
-		ensure!("tares" + [I M M I I] disallows "brink");
-		ensure!("baaaa" + [I C M I I] allows "aaccc");
+		ensure!(b"abcde" + [C C C C C] allows b"abcde");
+		ensure!(b"abcdf" + [C C C C C] disallows b"abcde");
+		ensure!(b"abcde" + [I I I I I] allows b"fghij");
+		ensure!(b"abcde" + [M M M M M] allows b"bcdea");
+		ensure!(b"aaabb" + [C M I I I] disallows b"accaa");
+		ensure!(b"baaaa" + [I C M I I] disallows b"caacc");
+		ensure!(b"abcde" + [I I I I I] disallows b"bcdea");
+		ensure!(b"tares" + [I M M I I] disallows b"brink");
+		ensure!(b"baaaa" + [I C M I I] allows b"aaccc");
 	}
 }

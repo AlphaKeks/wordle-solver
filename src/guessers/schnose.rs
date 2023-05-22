@@ -92,7 +92,7 @@ impl Guesser for Schnose {
 
 		if guess_history.is_empty() {
 			self.patterns = Cow::Borrowed(&PATTERNS);
-			return "tares";
+			return b"tares";
 		} else {
 			assert!(!self.patterns.is_empty());
 		}

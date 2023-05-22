@@ -74,7 +74,9 @@ fn play<G: Guesser + Default>(Args { max_games, max_attempts, .. }: Args) -> (f6
 	for answer in GAMES.lines().take(max_games) {
 		let start = Instant::now();
 
-		if let Some(n_attempts) = dictionary.play(G::default(), answer, max_attempts) {
+		if let Some(n_attempts) =
+			dictionary.play(G::default(), answer.as_bytes().try_into().unwrap(), max_attempts)
+		{
 			total_attempts += n_attempts;
 			games_played += 1;
 
