@@ -23,14 +23,14 @@ mod matcher {
 
 	#[test]
 	fn basic() {
-		ensure!(b"abcde" + [C C C C C] allows b"abcde");
-		ensure!(b"abcde" + [C C C C C] disallows b"abcdf");
-		ensure!(b"fghij" + [I I I I I] allows b"abcde");
-		ensure!(b"bcdea" + [M M M M M] allows b"abcde");
-		ensure!(b"accaa" + [C M I I I] disallows b"aaabb");
-		ensure!(b"caacc" + [I C M I I] disallows b"baaaa");
-		ensure!(b"bcdea" + [I I I I I] disallows b"abcde");
-		ensure!(b"brink" + [I M M I I] disallows b"tares");
-		ensure!(b"aaccc" + [I C M I I] allows b"baaaa");
+		ensure!("abcde" + [C C C C C] allows "abcde");
+		ensure!("abcde" + [C C C C C] disallows "abcdf");
+		ensure!("fghij" + [I I I I I] allows "abcde");
+		ensure!("bcdea" + [M M M M M] allows "abcde");
+		ensure!("accaa" + [C M I I I] disallows "aaabb");
+		ensure!("caacc" + [I C M I I] disallows "baaaa");
+		ensure!("bcdea" + [I I I I I] disallows "abcde");
+		ensure!("brink" + [I M M I I] disallows "tares");
+		ensure!("aaccc" + [I C M I I] allows "baaaa");
 	}
 }

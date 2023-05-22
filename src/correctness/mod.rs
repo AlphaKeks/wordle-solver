@@ -45,11 +45,13 @@ impl Correctness {
 
 	/// Calculates the correctness of a guess, given the actual answer.
 	#[inline]
-	pub fn compute(guess: &Word, answer: &Word) -> CorrectnessPattern {
+	pub fn compute(guess: Word, answer: Word) -> CorrectnessPattern {
 		let mut cmask = [Correctness::Incorrect; 5];
 
 		// Mark correct characters.
-		for (i, (answer_char, guess_char)) in std::iter::zip(answer, guess).enumerate() {
+		for (i, (answer_char, guess_char)) in
+			std::iter::zip(answer.bytes(), guess.bytes()).enumerate()
+		{
 			if answer_char == guess_char {
 				cmask[i] = Correctness::Correct;
 			}
@@ -65,7 +67,7 @@ impl Correctness {
 		}
 
 		// Mark misplaced characters.
-		for (i, guess_char) in guess.iter().enumerate() {
+		for (i, guess_char) in guess.bytes().enumerate() {
 			// Ignore correct characters.
 			if cmask[i].is_correct() {
 				continue;
@@ -73,7 +75,7 @@ impl Correctness {
 
 			// If any of the characters appear somewhere else in the word and have _not_ yet been
 			// marked, that means they are misplaced.
-			if std::iter::zip(answer, already_marked.iter_mut()).any(|(check, marked)| {
+			if std::iter::zip(answer.bytes(), already_marked.iter_mut()).any(|(check, marked)| {
 				if check == guess_char && !*marked {
 					*marked = true;
 					return true;

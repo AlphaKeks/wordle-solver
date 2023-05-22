@@ -2,16 +2,16 @@ use crate::{correctness::CorrectnessPattern, Correctness, Word};
 
 /// A single guess emitted by a [`Guesser`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Guess<'word> {
-	pub(crate) word: &'word Word,
+pub struct Guess {
+	pub(crate) word: Word,
 	pub(crate) correctness: CorrectnessPattern,
 }
 
-impl Guess<'_> {
+impl Guess {
 	/// Computes whether `other` should still be considered for future guesses, given the current
 	/// guess.
 	#[inline]
-	pub fn allows(&self, other: &Word) -> bool {
+	pub fn allows(&self, other: Word) -> bool {
 		Correctness::compute(other, self.word) == self.correctness
 	}
 }

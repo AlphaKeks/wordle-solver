@@ -1,51 +1,36 @@
-use crate::{print_word, Guesser};
+use crate::Guesser;
 use itertools::Itertools;
-use once_cell::sync::OnceCell;
-use std::{borrow::Cow, collections::HashSet, fmt::Display};
-use tracing::{debug, trace};
+use lazy_static::lazy_static;
+use std::{collections::HashSet, fmt::Display};
 
-/// All words allowed by Wordle + their occurrence count according Google Books
-/// (latest year per book)
-pub static LEGAL_WORDS: &str = include_str!("../../data/words/legal-words.txt");
+pub type Word = &'static str;
 
 /// Answers for the official Wordle game (March 5th 2022)
 pub static ANSWERS: &str = include_str!("../../data/words/wordle-answers.txt");
 
-pub(crate) static DICTIONARY_WORDS: OnceCell<Vec<DictionaryEntry>> = OnceCell::new();
+lazy_static! {
+	/// All words allowed by Wordle + their occurrence count according Google Books
+	/// (latest year per book)
+	pub static ref LEGAL_WORDS: HashSet<&'static str> = {
+		include_str!("../../data/words/legal-words.txt")
+			.lines()
+			.map(|line| {
+				line.split_once(' ')
+					.expect("Every line in the dictionary should be `word count`.")
+					.0
+			})
+			.collect()
+	};
 
-pub type Word = [u8; 5];
-
-/// The dictionary used for playing Wordle.
-///
-/// It contains a list of _legal_ words together with ther total count according to Google Books
-/// and relative frequency.
-#[derive(Debug, Clone, PartialEq)]
-pub struct Dictionary<'dict> {
-	pub words: Cow<'dict, Vec<DictionaryEntry>>,
-	pub legal_words: HashSet<Word>,
-}
-
-#[allow(clippy::new_without_default)]
-impl Dictionary<'_> {
-	/// Initializes a new [`Dictionary`], re-using a cache of dictionary words until it is required
-	/// to be changed (i.e. by pruning).
-	pub fn new() -> Self {
-		let legal_words = LEGAL_WORDS
+	/// Global instance of a [`Dictionary`] so that the guesser doesn't have to make a new one for
+	/// each guess.
+	pub static ref DICTIONARY: Dictionary = {
+		let legal_words = include_str!("../../data/words/legal-words.txt")
 			.lines()
 			.map(|line| -> (Word, usize) {
-				// Example line:
-				//
-				// hello 21260257
 				let (word, count) = line
 					.split_once(' ')
 					.expect("Every line in the dictionary should be `word count`.");
-
-				// Every word consists of 5 ASCII characters, so we turn it into bytes so we don't have
-				// to carry around strings.
-				let word = word
-					.as_bytes()
-					.try_into()
-					.expect("Every word should be 5 ASCII characters.");
 
 				let count = count
 					.parse()
@@ -60,8 +45,7 @@ impl Dictionary<'_> {
 			.map(|&(_, count)| count)
 			.sum();
 
-		let words = Cow::Borrowed(DICTIONARY_WORDS.get_or_init(|| {
-			legal_words
+		let words = legal_words
 				.into_iter()
 				.map(|(word, count)| {
 					// TODO: Apply sigmoid to improve the average quality of guesses.
@@ -70,16 +54,22 @@ impl Dictionary<'_> {
 					DictionaryEntry { word, count, frequency }
 				})
 				.sorted_by_key(|entry| std::cmp::Reverse(entry.count))
-				.collect_vec()
-		}));
+				.collect_vec();
 
-		let legal_words = HashSet::from_iter(words.iter().map(|entry| entry.word));
-
-		Self { words, legal_words }
-	}
+		Dictionary { words }
+	};
 }
 
-impl Dictionary<'_> {
+/// The dictionary used for playing Wordle.
+///
+/// It contains a list of _legal_ words together with ther total count according to Google Books
+/// and relative frequency.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Dictionary {
+	pub words: Vec<DictionaryEntry>,
+}
+
+impl Dictionary {
 	/// Plays a game of Wordle against the given [`Guesser`] and.
 	/// If the [`Guesser`] fails to guess the `answer` in `max_attempts`, this function will return
 	/// [`None`].
@@ -91,15 +81,12 @@ impl Dictionary<'_> {
 		max_attempts: usize,
 	) -> Option<usize> {
 		for round in 1..=max_attempts {
-			trace!("[Round {} / {}] Making a guess...", round, max_attempts);
-
 			// Make the guess
 			let guess = guesser.guess();
-			debug!("Guessed `{}`.", print_word!(guess));
 
 			// Ensure the guess is actually legal.
 			// [`debug_assert`] to prevent this from hurting performance in release mode.
-			debug_assert!(self.legal_words.contains(&guess));
+			debug_assert!(LEGAL_WORDS.contains(guess));
 
 			// We guessed correctly!
 			if guess == answer {
@@ -111,7 +98,7 @@ impl Dictionary<'_> {
 	}
 }
 
-impl Display for Dictionary<'_> {
+impl Display for Dictionary {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		write!(f, "{:?}", self.words)
 	}
@@ -127,7 +114,6 @@ pub struct DictionaryEntry {
 
 impl Display for DictionaryEntry {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		let word = std::str::from_utf8(&self.word).expect("Every word is 5 ASCII characters.");
-		write!(f, "{word}")
+		f.write_str(self.word)
 	}
 }
