@@ -111,9 +111,12 @@ impl Guesser for Schnose {
 		};
 
 		let remaining = self.measure_dict();
-		// let cutoff = (self.dictionary.entries.len() / 3).max(20);
-		let dictionary = self.dictionary.entries.iter();
-		// .take(cutoff);
+		let cutoff = (self.dictionary.entries.len() / 3).max(20);
+		let dictionary = self
+			.dictionary
+			.entries
+			.iter()
+			.take(cutoff);
 
 		for entry in dictionary {
 			let mut total_score = 0.0;
