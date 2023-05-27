@@ -1,8 +1,8 @@
 mod correctness;
-pub use correctness::{Correctness, CorrectnessPattern};
+pub use correctness::Correctness;
 
 mod wordle;
-pub use wordle::{Dictionary, Word, ANSWERS, DICTIONARY, LEGAL_WORDS};
+pub use wordle::{Word, Wordle, ANSWERS, DICTIONARY, LEGAL_WORDS};
 
 mod guesser;
 pub use guesser::{Guess, Guesser};

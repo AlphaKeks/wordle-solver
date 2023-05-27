@@ -1,10 +1,10 @@
-use crate::{correctness::CorrectnessPattern, Correctness, Word};
+use crate::{Correctness, Word};
 
 /// A single guess emitted by a [`Guesser`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Guess {
 	pub word: Word,
-	pub correctness: CorrectnessPattern,
+	pub correctness: [Correctness; 5],
 }
 
 impl Guess {

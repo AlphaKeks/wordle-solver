@@ -24,86 +24,86 @@ mod game {
 	#[test]
 	fn genius() {
 		let w = &DICTIONARY;
-		let g = guesser!(|_history| { b"right" });
-		let result = w.play(g, b"right", MAX_ATTEMPTS);
+		let mut g = guesser!(|_history| { b"right" });
+		let result = w.play(&mut g, b"right", MAX_ATTEMPTS);
 		assert_eq!(result, Some(1));
 	}
 
 	#[test]
 	fn magnificent() {
 		let w = &DICTIONARY;
-		let g = guesser!(|history| {
+		let mut g = guesser!(|history| {
 			if history.len() == 1 {
 				b"right"
 			} else {
 				b"wrong"
 			}
 		});
-		let result = w.play(g, b"right", MAX_ATTEMPTS);
+		let result = w.play(&mut g, b"right", MAX_ATTEMPTS);
 		assert_eq!(result, Some(2));
 	}
 
 	#[test]
 	fn impressive() {
 		let w = &DICTIONARY;
-		let g = guesser!(|history| {
+		let mut g = guesser!(|history| {
 			if history.len() == 2 {
 				b"right"
 			} else {
 				b"wrong"
 			}
 		});
-		let result = w.play(g, b"right", MAX_ATTEMPTS);
+		let result = w.play(&mut g, b"right", MAX_ATTEMPTS);
 		assert_eq!(result, Some(3));
 	}
 
 	#[test]
 	fn splendid() {
 		let w = &DICTIONARY;
-		let g = guesser!(|history| {
+		let mut g = guesser!(|history| {
 			if history.len() == 3 {
 				b"right"
 			} else {
 				b"wrong"
 			}
 		});
-		let result = w.play(g, b"right", MAX_ATTEMPTS);
+		let result = w.play(&mut g, b"right", MAX_ATTEMPTS);
 		assert_eq!(result, Some(4));
 	}
 
 	#[test]
 	fn great() {
 		let w = &DICTIONARY;
-		let g = guesser!(|history| {
+		let mut g = guesser!(|history| {
 			if history.len() == 4 {
 				b"right"
 			} else {
 				b"wrong"
 			}
 		});
-		let result = w.play(g, b"right", MAX_ATTEMPTS);
+		let result = w.play(&mut g, b"right", MAX_ATTEMPTS);
 		assert_eq!(result, Some(5));
 	}
 
 	#[test]
 	fn phew() {
 		let w = &DICTIONARY;
-		let g = guesser!(|history| {
+		let mut g = guesser!(|history| {
 			if history.len() == 5 {
 				b"right"
 			} else {
 				b"wrong"
 			}
 		});
-		let result = w.play(g, b"right", MAX_ATTEMPTS);
+		let result = w.play(&mut g, b"right", MAX_ATTEMPTS);
 		assert_eq!(result, Some(6));
 	}
 
 	#[test]
 	fn failed() {
 		let w = &DICTIONARY;
-		let g = guesser!(|_history| { b"wrong" });
-		let result = w.play(g, b"right", MAX_ATTEMPTS);
+		let mut g = guesser!(|_history| { b"wrong" });
+		let result = w.play(&mut g, b"right", MAX_ATTEMPTS);
 		assert_eq!(result, None);
 	}
 }

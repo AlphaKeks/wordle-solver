@@ -2,20 +2,19 @@ use clap::{Parser, ValueEnum};
 use std::time::Instant;
 use tracing::{error, info, Level};
 use tracing_subscriber::fmt::time::Uptime;
-use wordle_solver::{Guesser, DICTIONARY};
+use wordle_solver::{Guesser, ANSWERS, DICTIONARY};
 
 mod guessers;
-
-static GAMES: &str = include_str!("../data/words/wordle-answers.txt");
 
 #[derive(Debug, Clone, Copy, Parser)]
 struct Args {
 	/// The amount of games to play
 	#[arg(long = "games")]
-	max_games: Option<usize>,
+	#[clap(default_value = "10")]
+	max_games: usize,
 
 	/// The maximum amount of guesses until the guesser fails
-	#[arg(long = "attempts", long = "tries")]
+	#[arg(long = "attempts", alias = "tries")]
 	#[clap(default_value = "6")]
 	max_attempts: usize,
 
@@ -42,7 +41,7 @@ fn main() {
 
 	info!("--- Welcome to Wordle! ---");
 
-	match max_games.unwrap_or(1).max(1) {
+	match max_games {
 		1 => info!("  Playing 1 game!"),
 		n => info!("  Playing {n} games!"),
 	};
@@ -69,26 +68,27 @@ fn play<G: Guesser + Default>(Args { max_games, max_attempts, .. }: Args) -> (f6
 	let mut total_attempts = 0;
 	let mut games_played = 0;
 	let mut games_failed = 0;
-	let max_games = max_games.unwrap_or(1).max(1);
 
-	for answer in GAMES.lines().take(max_games) {
+	for (answer_str, answer_bytes) in ANSWERS
+		.lines()
+		.take(max_games)
+		.filter_map(|answer| Some((answer, answer.as_bytes().try_into().ok()?)))
+	{
 		let start = Instant::now();
 
-		if let Some(n_attempts) =
-			dictionary.play(G::default(), answer.as_bytes().try_into().unwrap(), max_attempts)
-		{
+		if let Some(n_attempts) = dictionary.play(&mut G::default(), answer_bytes, max_attempts) {
 			total_attempts += n_attempts;
-			games_played += 1;
 
 			let took = start.elapsed();
-			info!("Guessed \"{answer}\" in {n_attempts} attempts. ({took:?})");
+			info!("Guessed \"{answer_str}\" in {n_attempts} attempts. ({took:?})");
 		} else {
-			games_played += 1;
 			games_failed += 1;
 
 			let took = start.elapsed();
-			error!("Did not guess \"{answer}\" in <={max_attempts} attempts. ({took:?})");
+			error!("Did not guess \"{answer_str}\" in <={max_attempts} attempts. ({took:?})");
 		}
+
+		games_played += 1;
 	}
 
 	let avg_score = total_attempts as f64 / games_played as f64;

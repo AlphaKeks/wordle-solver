@@ -24,20 +24,25 @@ lazy_static! {
 
 	/// Global instance of a [`Dictionary`] so that the guesser doesn't have to make a new one for
 	/// each guess.
-	pub static ref DICTIONARY: Dictionary = {
-		Dictionary {
-			entries: include_str!("../../data/words/legal-words.txt")
+	pub static ref DICTIONARY: Wordle = {
+		Wordle {
+			dictionary: include_str!("../../data/words/legal-words.txt")
 				.lines()
 				.map(|line| {
 					let (word, count) = line
 						.split_once(' ')
 						.expect("Every line in the dictionary should be `word count`.");
 
+					let word = word
+						.as_bytes()
+						.try_into()
+						.expect("All words should be 5 ASCII characters.");
+
 					let count = count
 						.parse()
 						.expect("Every count should fit in `usize::MAX`.");
 
-					DictionaryEntry { word: word.as_bytes().try_into().unwrap(), count }
+					DictionaryEntry { word, count }
 				})
 				.sorted_unstable_by_key(|entry| std::cmp::Reverse(entry.count))
 				.collect_vec(),
@@ -45,37 +50,34 @@ lazy_static! {
 	};
 }
 
-/// The dictionary used for playing Wordle.
+/// A struct for playing Wordle.
 ///
-/// It contains a list of _legal_ words together with ther total count according to Google Books
-/// and relative frequency.
+/// It contains a list of _legal_ words together with ther total count according to Google Books.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Dictionary {
-	pub entries: Vec<DictionaryEntry>,
+pub struct Wordle {
+	pub dictionary: Vec<DictionaryEntry>,
 }
 
-impl Dictionary {
-	/// Plays a game of Wordle against the given [`Guesser`] and.
-	/// If the [`Guesser`] fails to guess the `answer` in `max_attempts`, this function will return
-	/// [`None`].
+impl Wordle {
+	/// Plays a game of Wordle against the given [`Guesser`].
+	/// If the [`Guesser`] fails to guess the `answer` in `max_attempts` or less, this function
+	/// will return [`None`].
 	/// Otherwise it will return [`Some`] with the amount of required guesses.
-	pub fn play(
+	pub fn play<G: Guesser>(
 		&self,
-		mut guesser: impl Guesser,
+		guesser: &mut G,
 		answer: Word,
 		max_attempts: usize,
 	) -> Option<usize> {
 		let mut guess_history = Vec::new();
 
 		for round in 1..=max_attempts {
-			// Make the guess
 			let guess = guesser.guess(&guess_history);
 
 			// Ensure the guess is actually legal.
-			let guess_str = std::str::from_utf8(guess).unwrap();
-			assert!(LEGAL_WORDS.contains(guess_str), "illegal guess \"{guess_str}\"");
+			// let guess_str = std::str::from_utf8(guess).unwrap();
+			// assert!(LEGAL_WORDS.contains(guess_str), "illegal guess \"{guess_str}\"");
 
-			// We guessed correctly!
 			if guess == answer {
 				return Some(round);
 			}
@@ -90,14 +92,13 @@ impl Dictionary {
 	}
 }
 
-impl Display for Dictionary {
+impl Display for Wordle {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		write!(f, "{:?}", self.entries)
+		write!(f, "{:?}", self.dictionary)
 	}
 }
 
-/// A single entry in the [`Dictionary`]
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DictionaryEntry {
 	pub word: Word,
 	pub count: usize,

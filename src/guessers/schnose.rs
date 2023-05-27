@@ -1,17 +1,15 @@
 use lazy_static::lazy_static;
 use std::borrow::Cow;
-use wordle_solver::{
-	Correctness, CorrectnessPattern, Dictionary, Guess, Guesser, Word, DICTIONARY,
-};
+use wordle_solver::{Correctness, Guess, Guesser, Word, Wordle, DICTIONARY};
 
 lazy_static! {
-	pub static ref PATTERNS: Vec<CorrectnessPattern> = Correctness::patterns().collect();
+	pub static ref PATTERNS: Vec<[Correctness; 5]> = Correctness::patterns().collect();
 }
 
 #[derive(Debug)]
 pub struct Schnose {
-	dictionary: Cow<'static, Dictionary>,
-	patterns: Cow<'static, Vec<CorrectnessPattern>>,
+	dictionary: Cow<'static, Wordle>,
+	patterns: Cow<'static, Vec<[Correctness; 5]>>,
 }
 
 impl Default for Schnose {
@@ -30,13 +28,13 @@ impl Schnose {
 			if let Cow::Owned(_) = self.dictionary {
 				self.dictionary
 					.to_mut()
-					.entries
+					.dictionary
 					.retain(|entry| last.allows(entry.word));
 			} else {
-				self.dictionary = Cow::Owned(Dictionary {
-					entries: self
+				self.dictionary = Cow::Owned(Wordle {
+					dictionary: self
 						.dictionary
-						.entries
+						.dictionary
 						.iter()
 						.filter(|entry| last.allows(entry.word))
 						.copied()
@@ -49,7 +47,7 @@ impl Schnose {
 	#[inline]
 	fn measure_dict(&self) -> usize {
 		self.dictionary
-			.entries
+			.dictionary
 			.iter()
 			.map(|entry| entry.count)
 			.sum()
@@ -62,7 +60,7 @@ impl Schnose {
 			.fold(0.0, |total_score, pattern| {
 				let mut in_pattern_total = 0;
 
-				for candidate in self.dictionary.entries.iter() {
+				for candidate in self.dictionary.dictionary.iter() {
 					let guess = Guess { word, correctness: *pattern };
 
 					if guess.allows(candidate.word) {
@@ -93,14 +91,12 @@ impl Guesser for Schnose {
 		if guess_history.is_empty() {
 			self.patterns = Cow::Borrowed(&PATTERNS);
 			return b"tares";
-		} else {
-			assert!(!self.patterns.is_empty());
 		}
 
 		let mut best_candidate = {
 			let entry = self
 				.dictionary
-				.entries
+				.dictionary
 				.first()
 				.expect("Dictionary should never be empty.");
 
@@ -111,20 +107,20 @@ impl Guesser for Schnose {
 		};
 
 		let remaining = self.measure_dict();
-		let cutoff = (self.dictionary.entries.len() / 3).max(20);
+		let cutoff = (self.dictionary.dictionary.len() / 3).max(20);
 		let dictionary = self
 			.dictionary
-			.entries
+			.dictionary
 			.iter()
 			.take(cutoff);
 
 		for entry in dictionary {
 			let mut total_score = 0.0;
 
-			let check_pattern = |pattern: &CorrectnessPattern| {
+			let check_pattern = |pattern: &[Correctness; 5]| {
 				let mut in_pattern_total = 0;
 
-				for candidate in &self.dictionary.entries {
+				for candidate in &self.dictionary.dictionary {
 					let guess = Guess { word: entry.word, correctness: *pattern };
 
 					if guess.allows(candidate.word) {

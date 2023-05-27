@@ -12,12 +12,10 @@ pub enum Correctness {
 	Incorrect,
 }
 
-pub type CorrectnessPattern = [Correctness; 5];
-
 impl Correctness {
 	/// Generates the cartesian product for [`Correctness`].
 	#[rustfmt::skip]
-	pub fn patterns() -> impl Iterator<Item = CorrectnessPattern> {
+	pub fn patterns() -> impl Iterator<Item = [Correctness; 5]> {
 		iproduct! {
 			[Correctness::Correct, Correctness::Misplaced, Correctness::Incorrect],
 			[Correctness::Correct, Correctness::Misplaced, Correctness::Incorrect],
@@ -30,22 +28,15 @@ impl Correctness {
 
 	/// Calculates the correctness of a guess, given the actual answer.
 	#[inline]
-	pub fn compute(guess: Word, answer: Word) -> CorrectnessPattern {
+	pub fn compute(guess: Word, answer: Word) -> [Correctness; 5] {
 		let mut cmask = [Correctness::Incorrect; 5];
+		let mut checked = [false; 5];
 
 		// Mark correct characters.
 		for (i, (answer_char, guess_char)) in std::iter::zip(answer, guess).enumerate() {
 			if answer_char == guess_char {
 				cmask[i] = Correctness::Correct;
-			}
-		}
-
-		let mut already_marked = [false; 5];
-
-		// Keep track of characters that are considered "correct" so we can ignore them later on.
-		for (i, &correctness) in cmask.iter().enumerate() {
-			if correctness == Correctness::Correct {
-				already_marked[i] = true;
+				checked[i] = true;
 			}
 		}
 
@@ -56,17 +47,14 @@ impl Correctness {
 				continue;
 			}
 
-			// If any of the characters appear somewhere else in the word and have _not_ yet been
-			// marked, that means they are misplaced.
-			if std::iter::zip(answer, already_marked.iter_mut()).any(|(check, marked)| {
-				if check == guess_char && !*marked {
-					*marked = true;
-					return true;
+			// If the current `guess_char` appears anywhere else in the word, mark it as
+			// `Misplaced` and set the other occurrence as "checked".
+			for (j, check) in answer.iter().enumerate() {
+				if check == guess_char && !checked[j] {
+					cmask[i] = Correctness::Misplaced;
+					checked[j] = true;
+					break;
 				}
-
-				false
-			}) {
-				cmask[i] = Correctness::Misplaced;
 			}
 		}
 
