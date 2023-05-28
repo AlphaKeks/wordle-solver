@@ -29,8 +29,13 @@ struct Args {
 
 	/// The amount of games to play
 	#[arg(long = "games")]
-	#[clap(default_value = "10")]
+	#[clap(default_value = "1")]
 	games: usize,
+
+	/// Play in interactive mode
+	#[arg(long)]
+	#[clap(default_value = "false")]
+	interactive: bool,
 }
 
 fn main() {
@@ -39,13 +44,16 @@ fn main() {
 		show_elapsed,
 		max_attempts,
 		games,
+		interactive,
 	} = Args::parse();
 
 	if let Some(log_level) = log_level {
 		setup_tracing(log_level, show_elapsed);
+	} else if interactive {
+		setup_tracing(Level::INFO, show_elapsed);
 	}
 
-	match max_attempts {
+	match games {
 		0 => return info!(":tf:"),
 		1 => info!("Playing 1 game!"),
 		n => info!("Playing {n} games!"),
@@ -53,6 +61,32 @@ fn main() {
 
 	info!("Welcome to Wordle!");
 
+	let (avg_score, total_fails) = match interactive {
+		true => play_interative(games),
+		false => play(max_attempts, games),
+	};
+
+	info!("Done.");
+	info!("Stats:");
+	info!("  * Average score: {avg_score:.2}");
+	info!("  * Failed games: {total_fails}");
+}
+
+fn setup_tracing(log_level: Level, show_elapsed: bool) {
+	let subscriber = tracing_subscriber::fmt()
+		.compact()
+		.with_max_level(log_level);
+
+	if show_elapsed {
+		subscriber
+			.with_timer(Uptime::default())
+			.init();
+	} else {
+		subscriber.without_time().init();
+	}
+}
+
+fn play(max_attempts: usize, games: usize) -> (f64, usize) {
 	let mut wordle = Wordle::new(max_attempts);
 	let mut total_attempts = 0;
 	let mut total_games = 0;
@@ -80,22 +114,26 @@ fn main() {
 
 	let avg_score = total_attempts as f64 / total_games as f64;
 
-	info!("Done.");
-	info!("Stats:");
-	info!("  * Average score: {avg_score:.2}");
-	info!("  * Failed games: {total_fails}");
+	(avg_score, total_fails)
 }
 
-fn setup_tracing(log_level: Level, show_elapsed: bool) {
-	let subscriber = tracing_subscriber::fmt()
-		.compact()
-		.with_max_level(log_level);
+fn play_interative(games: usize) -> (f64, usize) {
+	let mut wordle = Wordle::new(6);
+	let mut total_attempts = 0;
+	let mut total_games = 0;
+	let mut total_fails = 0;
 
-	if show_elapsed {
-		subscriber
-			.with_timer(Uptime::default())
-			.init();
-	} else {
-		subscriber.without_time().init();
+	for _ in 0..games {
+		if let Some(attempts) = wordle.play_interactive() {
+			total_attempts += attempts;
+		} else {
+			total_fails += 1;
+		}
+
+		total_games += 1;
 	}
+
+	let avg_score = total_attempts as f64 / total_games as f64;
+
+	(avg_score, total_fails)
 }

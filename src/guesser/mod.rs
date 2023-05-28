@@ -19,7 +19,7 @@ impl Guesser {
 		Self {
 			dictionary: Cow::Borrowed(&DICTIONARY),
 			patterns: Cow::Borrowed(&PATTERNS),
-			history: Vec::new(),
+			history: Vec::with_capacity(max_attempts),
 			max_attempts,
 		}
 	}

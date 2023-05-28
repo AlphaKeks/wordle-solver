@@ -1,8 +1,11 @@
 mod iter;
+use std::io::stdin;
+
 pub use iter::WordleIter;
 
 mod macros;
 pub(crate) use macros::bytes_to_string;
+use tracing::info;
 
 use crate::{correctness::Correctness, guess::Guess, guesser::Guesser};
 use hashbrown::HashSet;
@@ -84,6 +87,49 @@ impl Wordle {
 			self.guesser.history.push(Guess {
 				word: guess,
 				correctness: Correctness::compute(answer, guess),
+			});
+		}
+
+		None
+	}
+
+	pub fn play_interactive(&mut self) -> Option<usize> {
+		self.guesser.reset();
+
+		for round in 1..=6 {
+			let guess = self.guesser.guess();
+
+			let answer = loop {
+				info!("Guess: {}", bytes_to_string!(guess));
+				info!("Please enter the correctness. (e.g. `CCMIM` for correct / correct / misplaced / incorrect / misplaced)");
+				let mut input = String::with_capacity(7);
+				stdin()
+					.read_line(&mut input)
+					.expect("Failed to read from STDIN.");
+
+				let Ok(correctness) = input.trim().chars().map(|c| match c {
+					'C' => Ok(Correctness::Correct),
+					'M' => Ok(Correctness::Misplaced),
+					'I' => Ok(Correctness::Incorrect),
+					_ => Err(())
+				}).collect::<Result<Vec<_>, _>>() else {
+					continue;
+				};
+
+				if correctness.len() != 5 {
+					continue;
+				}
+
+				break correctness;
+			};
+
+			if answer == [Correctness::Correct; 5] {
+				return Some(round);
+			}
+
+			self.guesser.history.push(Guess {
+				word: guess,
+				correctness: answer.try_into().unwrap(),
 			});
 		}
 
