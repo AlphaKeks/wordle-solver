@@ -1,5 +1,0 @@
-[package]
-name = "wordle"
-version = "0.1.0"
-edition = "2021"
-authors = ["AlphaKeks <alphakeks@dawn.sh>"]

@@ -1,8 +1,15 @@
-use clap::{Parser, ValueEnum};
+mod correctness;
+mod guess;
+mod guesser;
+mod wordle;
+
+use clap::Parser;
 use std::time::Instant;
 use tracing::{error, info, Level};
 use tracing_subscriber::fmt::time::Uptime;
-use wordle::{Guesser, Wordle};
+use wordle::Wordle;
+
+use crate::wordle::bytes_to_string;
 
 #[derive(Parser)]
 struct Args {
@@ -20,14 +27,10 @@ struct Args {
 	#[clap(default_value = "6")]
 	max_attempts: usize,
 
-	/// The algorithm making guesses
-	#[arg(long)]
-	#[clap(default_value = "naive")]
-	algorithm: Algorithm,
-}
-
-#[derive(Debug, Clone, Copy, ValueEnum)]
-enum Algorithm {
+	/// The amount of games to play
+	#[arg(long = "games")]
+	#[clap(default_value = "10")]
+	games: usize,
 }
 
 fn main() {
@@ -35,7 +38,7 @@ fn main() {
 		log_level,
 		show_elapsed,
 		max_attempts,
-		algorithm,
+		games,
 	} = Args::parse();
 
 	if let Some(log_level) = log_level {
@@ -49,14 +52,37 @@ fn main() {
 	};
 
 	info!("Welcome to Wordle!");
-	info!("Algorithm: {algorithm:?}");
 
-	let (avg_score, total_fails) = match algorithm {
-	};
+	let mut wordle = Wordle::new(max_attempts);
+	let mut total_attempts = 0;
+	let mut total_games = 0;
+	let mut total_fails = 0;
+
+	for answer in wordle.iter().take(games) {
+		let start = Instant::now();
+
+		if let Some(attempts) = wordle.play(answer) {
+			total_attempts += attempts;
+
+			let answer = bytes_to_string!(answer);
+			let elapsed = start.elapsed();
+			info!("Guessed \"{answer}\" in {attempts} attempts. ({elapsed:?})");
+		} else {
+			total_fails += 1;
+
+			let answer = bytes_to_string!(answer);
+			let elapsed = start.elapsed();
+			error!("Did not guess \"{answer}\" in <= {max_attempts} attempts. ({elapsed:?})");
+		}
+
+		total_games += 1;
+	}
+
+	let avg_score = total_attempts as f64 / total_games as f64;
 
 	info!("Done.");
 	info!("Stats:");
-	info!("  * Average score: {avg_score}");
+	info!("  * Average score: {avg_score:.2}");
 	info!("  * Failed games: {total_fails}");
 }
 
@@ -73,33 +99,3 @@ fn setup_tracing(log_level: Level, show_elapsed: bool) {
 		subscriber.without_time().init();
 	}
 }
-
-fn play<G: Guesser>(max_attempts: usize) -> (f64, usize) {
-	let wordle = <G::Wordle as Wordle<G>>::new();
-	let mut total_attempts = 0;
-	let mut total_games = 0;
-	let mut total_fails = 0;
-
-	while let Some(answer) = wordle.next_answer() {
-		let start = Instant::now();
-
-		if let Some(attempts) = wordle.play(G::new(), max_attempts) {
-			total_attempts += attempts;
-
-			let elapsed = start.elapsed();
-			info!("Guessed \"{answer}\" in {attempts} attempts. ({elapsed:?})");
-		} else {
-			total_fails += 1;
-
-			let elapsed = start.elapsed();
-			error!("Did not guess \"{answer}\" in <= {max_attempts} attempts. ({elapsed:?})");
-		}
-
-		total_games += 1;
-	}
-
-	let avg_score = total_attempts as f64 / total_games as f64;
-
-	(avg_score, total_fails)
-}
-
