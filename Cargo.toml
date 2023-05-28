@@ -1,19 +1,9 @@
-[package]
-name = "wordle-solver"
-version = "0.2.0"
-edition = "2021"
-authors = ["AlphaKeks <alphakeks@dawn.sh>"]
+[workspace]
+members = ["solver-cli"]
 
 [profile.release]
 debug = true
 
-[dependencies]
-# logging
+[workspace.dependencies]
 tracing = "0.1.37"
-tracing-subscriber = "0.3.17"
-
-# CLI args
-clap = { version = "4.3.0", features = ["derive"] }
-
 itertools = "0.10.5"
-lazy_static = "1.4.0"
