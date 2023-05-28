@@ -1,5 +1,5 @@
 [workspace]
-members = ["solver-cli"]
+members = ["wordle", "solver-cli"]
 
 [profile.release]
 debug = true
